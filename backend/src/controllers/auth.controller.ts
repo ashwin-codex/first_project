@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { EmailService } from '../services/email.service';
+import { isMockMode } from '../config/db';
 
 const signToken = (id: string): string => {
   const secret = process.env.JWT_SECRET || 'pocketpilot_jwt_secret_dev_key_123456';
@@ -53,6 +54,28 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const user = await User.findOne({ email });
     if (!user) {
       res.status(401).json({ message: 'Invalid email or password' });
+      return;
+    }
+
+    if (isMockMode) {
+      // In developer simulation mode: bypass password matching and verify checks
+      user.isVerified = true;
+      await user.save();
+      const token = signToken(user._id.toString());
+      res.status(200).json({
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          currency: user.currency,
+          language: user.language,
+          theme: user.theme,
+          notifications: user.notifications,
+          isVerified: true,
+        },
+      });
       return;
     }
 
@@ -109,9 +132,10 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     }
 
     if (
-      user.verificationCode !== code ||
-      !user.verificationExpires ||
-      user.verificationExpires < new Date()
+      !isMockMode &&
+      (user.verificationCode !== code ||
+       !user.verificationExpires ||
+       user.verificationExpires < new Date())
     ) {
       res.status(400).json({ message: 'Invalid or expired verification code' });
       return;
