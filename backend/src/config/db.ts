@@ -88,7 +88,7 @@ function setupInMemoryMock() {
         return true;
       });
     }
-    const instances = filtered.map(item => new this(item));
+    const instances = filtered.map(item => this.hydrate(item));
     return new MockQuery(instances) as any;
   } as any;
 
@@ -110,7 +110,7 @@ function setupInMemoryMock() {
         return true;
       }) || null;
     }
-    const instance = matched ? new this(matched) : null;
+    const instance = matched ? this.hydrate(matched) : null;
     return new MockQuery(instance) as any;
   } as any;
 
@@ -119,7 +119,7 @@ function setupInMemoryMock() {
     const modelName = this.modelName;
     const items = db[modelName] || [];
     const matched = items.find(item => item._id === id?.toString()) || null;
-    const instance = matched ? new this(matched) : null;
+    const instance = matched ? this.hydrate(matched) : null;
     return new MockQuery(instance) as any;
   } as any;
 
@@ -133,7 +133,7 @@ function setupInMemoryMock() {
       items[idx] = { ...items[idx], ...update };
       matched = items[idx];
     }
-    const instance = matched ? new this(matched) : null;
+    const instance = matched ? this.hydrate(matched) : null;
     return new MockQuery(instance) as any;
   } as any;
 
@@ -167,7 +167,7 @@ function setupInMemoryMock() {
       items.push(newItem);
       matched = newItem;
     }
-    const instance = matched ? new this(matched) : null;
+    const instance = matched ? this.hydrate(matched) : null;
     return new MockQuery(instance) as any;
   } as any;
 
