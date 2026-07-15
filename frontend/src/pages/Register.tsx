@@ -34,8 +34,12 @@ export const Register: React.FC = () => {
     setSubmitting(true);
     try {
       await registerUser(data.name, data.email, data.password);
-      showToast('Registration successful! Please check your email for the verification code.', 'success');
-      navigate('/verify-email', { state: { email: data.email } });
+      showToast('Registration successful!', 'success');
+      if (localStorage.getItem('pocketpilot-token')) {
+        navigate('/dashboard');
+      } else {
+        navigate('/verify-email', { state: { email: data.email } });
+      }
     } catch (error: any) {
       const responseMsg = error.response?.data?.message || 'Registration failed. Please try again.';
       showToast(responseMsg, 'error');

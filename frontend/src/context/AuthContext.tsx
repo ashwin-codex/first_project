@@ -66,7 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (name: string, email: string, password: string) => {
-    await API.post('/auth/register', { name, email, password });
+    const res = await API.post('/auth/register', { name, email, password });
+    if (res.data && res.data.token) {
+      const { token, user: loggedUser } = res.data;
+      localStorage.setItem('pocketpilot-token', token);
+      setUser(loggedUser);
+    }
   };
 
   const verify = async (email: string, code: string) => {

@@ -20,6 +20,25 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (isMockMode) {
+        const token = signToken(existingUser._id.toString());
+        res.status(200).json({
+          message: 'User already exists. Logged in successfully.',
+          token,
+          user: {
+            id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            avatar: existingUser.avatar,
+            currency: existingUser.currency,
+            language: existingUser.language,
+            theme: existingUser.theme,
+            notifications: existingUser.notifications,
+            isVerified: true
+          }
+        });
+        return;
+      }
       res.status(400).json({ message: 'User already exists with this email address' });
       return;
     }
@@ -35,8 +54,32 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       verificationExpires
     });
 
+    if (isMockMode) {
+      user.isVerified = true;
+    }
+
     await user.save();
     await EmailService.sendVerificationEmail(user.email, verificationCode);
+
+    if (isMockMode) {
+      const token = signToken(user._id.toString());
+      res.status(201).json({
+        message: 'Registration successful',
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          currency: user.currency,
+          language: user.language,
+          theme: user.theme,
+          notifications: user.notifications,
+          isVerified: true
+        }
+      });
+      return;
+    }
 
     res.status(201).json({
       message: 'Registration successful. A verification code has been sent to your email.',
